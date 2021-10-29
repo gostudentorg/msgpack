@@ -325,6 +325,8 @@ func ToTime(i interface{}) time.Time {
 		return time.Time{}
 	case float64:
 		return time.Unix(0, int64(v*millisec))
+	case uint32:
+		return time.Unix(int64(v), 0)
 	case int64:
 		return time.Unix(v/1000, (v%1000)*millisec)
 	case string:

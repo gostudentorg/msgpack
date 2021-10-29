@@ -171,7 +171,7 @@ func decodeBytesValue(d *Decoder, v reflect.Value) error {
 		return err
 	}
 
-	if !msgpcode.IsBin(c) && !msgpcode.IsString(c) {
+	if !msgpcode.IsBin(c) && !msgpcode.IsString(c) && c != msgpcode.Nil {
 		val, err := d.decodeInterfaceFromCode(c)
 		if err != nil {
 			return err
