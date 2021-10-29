@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"reflect"
 
+	"git.gostudent.de/pkg/log"
+	"git.gostudent.de/pkg/log/errors"
 	"github.com/vmihailenco/msgpack/v5/msgpcode"
 )
 
@@ -81,7 +83,22 @@ func makeStrings(s []string, n int) []string {
 }
 
 func decodeSliceValue(d *Decoder, v reflect.Value) error {
-	n, err := d.DecodeArrayLen()
+	c, err := d.readCode()
+	if err != nil {
+		return err
+	}
+
+	if !msgpcode.IsArray(c) && c != msgpcode.Nil {
+		val, err := d.decoderInterfaceFromCode(c)
+		if err != nil {
+			return err
+		}
+		log.Warn().Err(errors.Errorf("ToSlice: type %T not implemented", val), "",
+			log.String("data", fmt.Sprintf("%+v", val)))
+		return nil
+	}
+
+	n, err := d.arrayLen(c)
 	if err != nil {
 		return err
 	}

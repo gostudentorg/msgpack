@@ -381,11 +381,15 @@ func (d *Decoder) DecodeInterface() (interface{}, error) {
 		return nil, err
 	}
 
+	return d.decoderInterfaceFromCode(c)
+}
+
+func (d *Decoder) decoderInterfaceFromCode(c byte) (interface{}, error) {
 	if msgpcode.IsFixedNum(c) {
 		return int8(c), nil
 	}
 	if msgpcode.IsFixedMap(c) {
-		err = d.s.UnreadByte()
+		err := d.s.UnreadByte()
 		if err != nil {
 			return nil, err
 		}
@@ -430,7 +434,7 @@ func (d *Decoder) DecodeInterface() (interface{}, error) {
 	case msgpcode.Array16, msgpcode.Array32:
 		return d.decodeSlice(c)
 	case msgpcode.Map16, msgpcode.Map32:
-		err = d.s.UnreadByte()
+		err := d.s.UnreadByte()
 		if err != nil {
 			return nil, err
 		}

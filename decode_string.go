@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"reflect"
 
+	"git.gostudent.de/pkg/log"
+	"git.gostudent.de/pkg/log/errors"
 	"github.com/vmihailenco/msgpack/v5/msgpcode"
 )
 
@@ -158,6 +160,16 @@ func decodeBytesValue(d *Decoder, v reflect.Value) error {
 	c, err := d.readCode()
 	if err != nil {
 		return err
+	}
+
+	if !msgpcode.IsBin(c) && !msgpcode.IsString(c) {
+		val, err := d.decoderInterfaceFromCode(c)
+		if err != nil {
+			return err
+		}
+		log.Warn().Err(errors.Errorf("ToBytes: type %T not implemented", val), "",
+			log.String("data", fmt.Sprintf("%+v", val)))
+		return nil
 	}
 
 	b, err := d.bytes(c, v.Bytes())

@@ -3,10 +3,12 @@ package msgpack
 import (
 	"encoding"
 	"fmt"
-	"log"
 	"reflect"
 	"sync"
+	"time"
 
+	"git.gostudent.de/pkg/log"
+	"git.gostudent.de/pkg/log/errors"
 	"github.com/vmihailenco/tagparser/v2"
 )
 
@@ -55,7 +57,7 @@ func Register(value interface{}, enc encoderFunc, dec decoderFunc) {
 	}
 }
 
-//------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 
 const defaultStructTag = "msgpack"
 
@@ -87,7 +89,7 @@ func (m *structCache) Fields(typ reflect.Type, tag string) *fields {
 	return fs
 }
 
-//------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 
 type field struct {
 	name      string
@@ -118,7 +120,65 @@ func (f *field) DecodeValue(d *Decoder, strct reflect.Value) error {
 	return f.decoder(d, v)
 }
 
-//------------------------------------------------------------------------------
+var (
+	reflectTime      = reflect.TypeOf(time.Time{}).Kind()
+	reflectBytesType = reflect.TypeOf([]byte{})
+)
+
+// DecodeViaInterface decodes a value to interface first and is then transformed into
+// the correct type. This allows decoding values from dynamic languages if the types
+// are not correct.
+func (f *field) DecodeViaInterface(d *Decoder, strct reflect.Value) error {
+	v := fieldByIndexAlloc(strct, f.index)
+	if !v.CanSet() {
+		return errors.Errorf("msgpack interface decoding: cannot set field %s", f.name)
+	}
+
+	switch v.Kind() {
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		iface, err := d.DecodeInterface()
+		if err != nil {
+			return err
+		}
+		v.SetInt(ToInt64(iface))
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		iface, err := d.DecodeInterface()
+		if err != nil {
+			return err
+		}
+		v.SetUint(ToUInt64(iface))
+	case reflect.Float64, reflect.Float32:
+		iface, err := d.DecodeInterface()
+		if err != nil {
+			return err
+		}
+		v.SetFloat(ToFloat64(iface))
+	case reflect.String:
+		iface, err := d.DecodeInterface()
+		if err != nil {
+			return err
+		}
+		v.SetString(ToString(iface))
+	case reflect.Bool:
+		iface, err := d.DecodeInterface()
+		if err != nil {
+			return err
+		}
+		v.SetBool(ToBool(iface))
+	case reflectTime:
+		iface, err := d.DecodeInterface()
+		if err != nil {
+			return err
+		}
+		v.Set(reflect.ValueOf(ToTime(iface)))
+	default:
+		return f.decoder(d, v)
+	}
+
+	return nil
+}
+
+// ------------------------------------------------------------------------------
 
 type fields struct {
 	Type    reflect.Type
@@ -148,7 +208,7 @@ func (fs *fields) Add(field *field) {
 
 func (fs *fields) warnIfFieldExists(name string) {
 	if _, ok := fs.Map[name]; ok {
-		log.Printf("msgpack: %s already has field=%s", fs.Type, name)
+		log.Msgf("msgpack: %s already has field=%s", fs.Type, name)
 	}
 }
 
@@ -233,7 +293,7 @@ func getFields(typ reflect.Type, fallbackTag string) *fields {
 
 			if inline {
 				if _, ok := fs.Map[field.name]; ok {
-					log.Printf("msgpack: %s already has field=%s", fs.Type, field.name)
+					log.Msgf("msgpack: %s already has field=%s", fs.Type, field.name)
 				}
 				fs.Map[field.name] = field
 				continue

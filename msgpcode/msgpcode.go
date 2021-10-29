@@ -55,6 +55,14 @@ var (
 	Ext32    byte = 0xc9
 )
 
+func IsArray(c byte) bool {
+	return IsFixedArray(c) || c == Array16 || c == Array32
+}
+
+func IsMap(c byte) bool {
+	return IsFixedMap(c) || c == Map16 || c == Map32
+}
+
 func IsFixedNum(c byte) bool {
 	return c <= PosFixedNumHigh || c >= NegFixedNumLow
 }
