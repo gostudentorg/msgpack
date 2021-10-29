@@ -164,7 +164,7 @@ func (d *Decoder) DecodeTime() (time.Time, error) {
 
 	// NodeJS seems to use extID 13.
 	if extID != timeExtID && extID != 13 {
-		return time.Time{}, fmt.Errorf("msgpack: invalid time ext id=%d", extID)
+		return time.Time{}, errors.Errorf("msgpack: invalid time ext id=%d", extID)
 	}
 
 	tm, err := d.decodeTime(extLen)
@@ -199,7 +199,7 @@ func (d *Decoder) decodeTime(extLen int) (time.Time, error) {
 		sec := binary.BigEndian.Uint64(b[4:])
 		return time.Unix(int64(sec), int64(nsec)), nil
 	default:
-		err = fmt.Errorf("msgpack: invalid ext len=%d decoding time", extLen)
+		err = errors.Errorf("msgpack: invalid ext len=%d decoding time", extLen)
 		return time.Time{}, err
 	}
 }

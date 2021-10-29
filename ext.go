@@ -1,10 +1,10 @@
 package msgpack
 
 import (
-	"fmt"
 	"math"
 	"reflect"
 
+	"git.gostudent.de/pkg/log/errors"
 	"github.com/vmihailenco/msgpack/v5/msgpcode"
 )
 
@@ -96,7 +96,7 @@ func makeExtEncoder(
 func makeExtEncoderAddr(extEncoder encoderFunc) encoderFunc {
 	return func(e *Encoder, v reflect.Value) error {
 		if !v.CanAddr() {
-			return fmt.Errorf("msgpack: Decode(nonaddressable %T)", v.Interface())
+			return errors.Errorf("msgpack: Decode(nonaddressable %T)", v.Interface())
 		}
 		return extEncoder(e, v.Addr())
 	}
@@ -148,7 +148,7 @@ func makeExtDecoder(
 			return err
 		}
 		if extID != wantedExtID {
-			return fmt.Errorf("msgpack: got ext type=%d, wanted %d", extID, wantedExtID)
+			return errors.Errorf("msgpack: got ext type=%d, wanted %d", extID, wantedExtID)
 		}
 		return decoder(d, v, extLen)
 	})
@@ -157,7 +157,7 @@ func makeExtDecoder(
 func makeExtDecoderAddr(extDecoder decoderFunc) decoderFunc {
 	return func(d *Decoder, v reflect.Value) error {
 		if !v.CanAddr() {
-			return fmt.Errorf("msgpack: Decode(nonaddressable %T)", v.Interface())
+			return errors.Errorf("msgpack: Decode(nonaddressable %T)", v.Interface())
 		}
 		return extDecoder(d, v.Addr())
 	}
@@ -239,7 +239,7 @@ func (d *Decoder) parseExtLen(c byte) (int, error) {
 		n, err := d.uint32()
 		return int(n), err
 	default:
-		return 0, fmt.Errorf("msgpack: invalid code=%x decoding ext len", c)
+		return 0, errors.Errorf("msgpack: invalid code=%x decoding ext len", c)
 	}
 }
 
@@ -251,7 +251,7 @@ func (d *Decoder) decodeInterfaceExt(c byte) (interface{}, error) {
 
 	info, ok := extTypes[extID]
 	if !ok {
-		return nil, fmt.Errorf("msgpack: unknown ext id=%d", extID)
+		return nil, errors.Errorf("msgpack: unknown ext id=%d", extID)
 	}
 
 	v := reflect.New(info.Type).Elem()

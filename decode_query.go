@@ -1,10 +1,10 @@
 package msgpack
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 
+	"git.gostudent.de/pkg/log/errors"
 	"github.com/vmihailenco/msgpack/v5/msgpcode"
 )
 
@@ -62,7 +62,7 @@ func (d *Decoder) query(q *queryResult) error {
 	case code == msgpcode.Array16 || code == msgpcode.Array32 || msgpcode.IsFixedArray(code):
 		err = d.queryArrayIndex(q)
 	default:
-		err = fmt.Errorf("msgpack: unsupported code=%x decoding key=%q", code, q.key)
+		err = errors.Errorf("msgpack: unsupported code=%x decoding key=%q", code, q.key)
 	}
 	return err
 }

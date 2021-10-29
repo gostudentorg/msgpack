@@ -2,7 +2,6 @@ package msgpack
 
 import (
 	"encoding"
-	"fmt"
 	"reflect"
 	"sync"
 	"time"
@@ -228,7 +227,7 @@ func getFields(typ reflect.Type, fallbackTag string) *fields {
 				field.encoder = encodeInternedStringValue
 				field.decoder = decodeInternedStringValue
 			default:
-				err := fmt.Errorf("msgpack: intern strings are not supported on %s", f.Type)
+				err := errors.Errorf("msgpack: intern strings are not supported on %s", f.Type)
 				panic(err)
 			}
 		} else {

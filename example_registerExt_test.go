@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"git.gostudent.de/pkg/log/errors"
 	"github.com/vmihailenco/msgpack/v5"
 )
 
@@ -33,7 +34,7 @@ func (tm *EventTime) MarshalMsgpack() ([]byte, error) {
 
 func (tm *EventTime) UnmarshalMsgpack(b []byte) error {
 	if len(b) != 8 {
-		return fmt.Errorf("invalid data length: got %d, wanted 8", len(b))
+		return errors.Errorf("invalid data length: got %d, wanted 8", len(b))
 	}
 	sec := binary.BigEndian.Uint32(b)
 	usec := binary.BigEndian.Uint32(b[4:])
@@ -50,7 +51,7 @@ func (tm *OneMoreSecondEventTime) MarshalMsgpack() ([]byte, error) {
 
 func (tm *OneMoreSecondEventTime) UnmarshalMsgpack(b []byte) error {
 	if len(b) != 8 {
-		return fmt.Errorf("invalid data length: got %d, wanted 8", len(b))
+		return errors.Errorf("invalid data length: got %d, wanted 8", len(b))
 	}
 	sec := binary.BigEndian.Uint32(b)
 	usec := binary.BigEndian.Uint32(b[4:])

@@ -1,10 +1,10 @@
 package msgpack
 
 import (
-	"fmt"
 	"math"
 	"reflect"
 
+	"git.gostudent.de/pkg/log/errors"
 	"github.com/vmihailenco/msgpack/v5/msgpcode"
 )
 
@@ -96,7 +96,7 @@ func (e *Encoder) encodeInternedStringIndex(idx int) error {
 		return e.write4(byte(internedStringExtID), uint32(idx))
 	}
 
-	return fmt.Errorf("msgpack: interned string index=%d is too large", idx)
+	return errors.Errorf("msgpack: interned string index=%d is too large", idx)
 }
 
 //------------------------------------------------------------------------------
@@ -149,7 +149,7 @@ func (d *Decoder) decodeInternedString(intern bool) (string, error) {
 			return "", err
 		}
 		if typeID != internedStringExtID {
-			err := fmt.Errorf("msgpack: got ext type=%d, wanted %d",
+			err := errors.Errorf("msgpack: got ext type=%d, wanted %d",
 				typeID, internedStringExtID)
 			return "", err
 		}
@@ -208,13 +208,13 @@ func (d *Decoder) decodeInternedStringIndex(extLen int) (int, error) {
 		return int(n), nil
 	}
 
-	err := fmt.Errorf("msgpack: unsupported ext len=%d decoding interned string", extLen)
+	err := errors.Errorf("msgpack: unsupported ext len=%d decoding interned string", extLen)
 	return 0, err
 }
 
 func (d *Decoder) internedStringAtIndex(idx int) (string, error) {
 	if idx >= len(d.dict) {
-		err := fmt.Errorf("msgpack: interned string at index=%d does not exist", idx)
+		err := errors.Errorf("msgpack: interned string at index=%d does not exist", idx)
 		return "", err
 	}
 	return d.dict[idx], nil

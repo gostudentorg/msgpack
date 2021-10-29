@@ -242,7 +242,7 @@ func (d *Decoder) DecodeTypedMap() (interface{}, error) {
 	valueType := reflect.TypeOf(value)
 
 	if !keyType.Comparable() {
-		return nil, fmt.Errorf("msgpack: unsupported map key: %s", keyType.String())
+		return nil, errors.Errorf("msgpack: unsupported map key: %s", keyType.String())
 	}
 
 	mapType := reflect.MapOf(keyType, valueType)
@@ -352,7 +352,7 @@ func (d *Decoder) decodeStruct(v reflect.Value, n int) error {
 		}
 
 		if d.flags&disallowUnknownFieldsFlag != 0 {
-			return fmt.Errorf("msgpack: unknown field %q", name)
+			return errors.Errorf("msgpack: unknown field %q", name)
 		}
 		if err := d.Skip(); err != nil {
 			return err
