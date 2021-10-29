@@ -337,6 +337,15 @@ func (d *Decoder) DecodeBool() (bool, error) {
 	if err != nil {
 		return false, err
 	}
+
+	if !msgpcode.IsBool(c) && c != msgpcode.Nil {
+		val, err := d.decodeInterfaceFromCode(c)
+		if err != nil {
+			return false, err
+		}
+		return ToBool(val), nil
+	}
+
 	return d.bool(c)
 }
 
@@ -381,10 +390,10 @@ func (d *Decoder) DecodeInterface() (interface{}, error) {
 		return nil, err
 	}
 
-	return d.decoderInterfaceFromCode(c)
+	return d.decodeInterfaceFromCode(c)
 }
 
-func (d *Decoder) decoderInterfaceFromCode(c byte) (interface{}, error) {
+func (d *Decoder) decodeInterfaceFromCode(c byte) (interface{}, error) {
 	if msgpcode.IsFixedNum(c) {
 		return int8(c), nil
 	}

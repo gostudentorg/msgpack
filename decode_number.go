@@ -84,6 +84,15 @@ func (d *Decoder) DecodeUint64() (uint64, error) {
 	if err != nil {
 		return 0, err
 	}
+
+	if !msgpcode.IsInt(c) && !msgpcode.IsUInt(c) && !msgpcode.IsFixedNum(c) && c != msgpcode.Nil {
+		val, err := d.decodeInterfaceFromCode(c)
+		if err != nil {
+			return 0, err
+		}
+		return ToUInt64(val), nil
+	}
+
 	return d.uint(c)
 }
 
@@ -126,6 +135,15 @@ func (d *Decoder) DecodeInt64() (int64, error) {
 	if err != nil {
 		return 0, err
 	}
+
+	if !msgpcode.IsInt(c) && !msgpcode.IsUInt(c) && !msgpcode.IsFixedNum(c) && c != msgpcode.Nil {
+		val, err := d.decodeInterfaceFromCode(c)
+		if err != nil {
+			return 0, err
+		}
+		return ToInt64(val), nil
+	}
+
 	return d.int(c)
 }
 
@@ -167,6 +185,15 @@ func (d *Decoder) DecodeFloat32() (float32, error) {
 	if err != nil {
 		return 0, err
 	}
+
+	if c != msgpcode.Float {
+		val, err := d.decodeInterfaceFromCode(c)
+		if err != nil {
+			return 0, err
+		}
+		return float32(ToFloat64(val)), nil
+	}
+
 	return d.float32(c)
 }
 
@@ -192,6 +219,15 @@ func (d *Decoder) DecodeFloat64() (float64, error) {
 	if err != nil {
 		return 0, err
 	}
+
+	if !msgpcode.IsFloat(c) {
+		val, err := d.decodeInterfaceFromCode(c)
+		if err != nil {
+			return 0, err
+		}
+		return ToFloat64(val), nil
+	}
+
 	return d.float64(c)
 }
 
@@ -213,7 +249,7 @@ func (d *Decoder) float64(c byte) (float64, error) {
 
 	n, err := d.int(c)
 	if err != nil {
-		return 0, fmt.Errorf("msgpack: invalid code=%x decoding float32", c)
+		return 0, fmt.Errorf("msgpack: invalid code=%x decoding float64", c)
 	}
 	return float64(n), nil
 }

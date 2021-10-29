@@ -318,8 +318,6 @@ func ToBool(i interface{}) bool {
 	return false
 }
 
-const millisec = 1000000
-
 // ToTime converts a value to time.Time.
 func ToTime(i interface{}) time.Time {
 	switch v := i.(type) {

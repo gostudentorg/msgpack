@@ -42,6 +42,15 @@ func (d *Decoder) DecodeString() (string, error) {
 	if err != nil {
 		return "", err
 	}
+
+	if !msgpcode.IsString(c) && !msgpcode.IsBin(c) && c != msgpcode.Nil {
+		val, err := d.decodeInterfaceFromCode(c)
+		if err != nil {
+			return "", err
+		}
+		return ToString(val), nil
+	}
+
 	return d.string(c)
 }
 
@@ -163,7 +172,7 @@ func decodeBytesValue(d *Decoder, v reflect.Value) error {
 	}
 
 	if !msgpcode.IsBin(c) && !msgpcode.IsString(c) {
-		val, err := d.decoderInterfaceFromCode(c)
+		val, err := d.decodeInterfaceFromCode(c)
 		if err != nil {
 			return err
 		}

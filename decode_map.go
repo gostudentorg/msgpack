@@ -153,7 +153,7 @@ func (d *Decoder) DecodeMap() (map[string]interface{}, error) {
 	}
 
 	if !msgpcode.IsMap(c) && c != msgpcode.Nil {
-		val, err := d.decoderInterfaceFromCode(c)
+		val, err := d.decodeInterfaceFromCode(c)
 		if err != nil {
 			return nil, err
 		}
@@ -345,7 +345,7 @@ func (d *Decoder) decodeStruct(v reflect.Value, n int) error {
 		}
 
 		if f := fields.Map[name]; f != nil {
-			if err := f.DecodeViaInterface(d, v); err != nil {
+			if err := f.DecodeValue(d, v); err != nil {
 				return err
 			}
 			continue

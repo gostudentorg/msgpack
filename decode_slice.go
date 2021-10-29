@@ -89,7 +89,7 @@ func decodeSliceValue(d *Decoder, v reflect.Value) error {
 	}
 
 	if !msgpcode.IsArray(c) && c != msgpcode.Nil {
-		val, err := d.decoderInterfaceFromCode(c)
+		val, err := d.decodeInterfaceFromCode(c)
 		if err != nil {
 			return err
 		}
@@ -141,7 +141,22 @@ func growSliceValue(v reflect.Value, n int) reflect.Value {
 }
 
 func decodeArrayValue(d *Decoder, v reflect.Value) error {
-	n, err := d.DecodeArrayLen()
+	c, err := d.readCode()
+	if err != nil {
+		return err
+	}
+
+	if !msgpcode.IsArray(c) && c != msgpcode.Nil {
+		val, err := d.decodeInterfaceFromCode(c)
+		if err != nil {
+			return err
+		}
+		log.Warn().Err(errors.Errorf("ToSlice: type %T not implemented", val), "",
+			log.String("data", fmt.Sprintf("%+v", val)))
+		return nil
+	}
+
+	n, err := d.arrayLen(c)
 	if err != nil {
 		return err
 	}

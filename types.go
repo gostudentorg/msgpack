@@ -115,67 +115,24 @@ func (f *field) EncodeValue(e *Encoder, strct reflect.Value) error {
 	return f.encoder(e, v)
 }
 
+var reflectTime = reflect.TypeOf(time.Time{})
+
 func (f *field) DecodeValue(d *Decoder, strct reflect.Value) error {
-	v := fieldByIndexAlloc(strct, f.index)
-	return f.decoder(d, v)
-}
-
-var (
-	reflectTime      = reflect.TypeOf(time.Time{}).Kind()
-	reflectBytesType = reflect.TypeOf([]byte{})
-)
-
-// DecodeViaInterface decodes a value to interface first and is then transformed into
-// the correct type. This allows decoding values from dynamic languages if the types
-// are not correct.
-func (f *field) DecodeViaInterface(d *Decoder, strct reflect.Value) error {
 	v := fieldByIndexAlloc(strct, f.index)
 	if !v.CanSet() {
 		return errors.Errorf("msgpack interface decoding: cannot set field %s", f.name)
 	}
 
-	switch v.Kind() {
-	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		iface, err := d.DecodeInterface()
-		if err != nil {
-			return err
-		}
-		v.SetInt(ToInt64(iface))
-	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-		iface, err := d.DecodeInterface()
-		if err != nil {
-			return err
-		}
-		v.SetUint(ToUInt64(iface))
-	case reflect.Float64, reflect.Float32:
-		iface, err := d.DecodeInterface()
-		if err != nil {
-			return err
-		}
-		v.SetFloat(ToFloat64(iface))
-	case reflect.String:
-		iface, err := d.DecodeInterface()
-		if err != nil {
-			return err
-		}
-		v.SetString(ToString(iface))
-	case reflect.Bool:
-		iface, err := d.DecodeInterface()
-		if err != nil {
-			return err
-		}
-		v.SetBool(ToBool(iface))
-	case reflectTime:
+	if v.Type() == reflectTime {
 		iface, err := d.DecodeInterface()
 		if err != nil {
 			return err
 		}
 		v.Set(reflect.ValueOf(ToTime(iface)))
-	default:
-		return f.decoder(d, v)
+		return nil
 	}
 
-	return nil
+	return f.decoder(d, v)
 }
 
 // ------------------------------------------------------------------------------

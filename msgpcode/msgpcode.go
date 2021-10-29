@@ -55,6 +55,22 @@ var (
 	Ext32    byte = 0xc9
 )
 
+func IsFloat(c byte) bool {
+	return c == Float || c == Double
+}
+
+func IsInt(c byte) bool {
+	return c == Int8 || c == Int16 || c == Int32 || c == Int64
+}
+
+func IsUInt(c byte) bool {
+	return c == Uint8 || c == Uint16 || c == Uint32 || c == Uint64
+}
+
+func IsBool(c byte) bool {
+	return c == True || c == False
+}
+
 func IsArray(c byte) bool {
 	return IsFixedArray(c) || c == Array16 || c == Array32
 }
