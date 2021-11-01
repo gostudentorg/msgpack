@@ -1,10 +1,11 @@
 package msgpack
 
 import (
-	"errors"
 	"fmt"
 	"reflect"
 
+	"git.gostudent.de/pkg/log"
+	"git.gostudent.de/pkg/log/errors"
 	"github.com/vmihailenco/msgpack/v5/msgpcode"
 )
 
@@ -51,6 +52,14 @@ func (d *Decoder) decodeMapDefault() (interface{}, error) {
 
 // DecodeMapLen decodes map length. Length is -1 when map is nil.
 func (d *Decoder) DecodeMapLen() (int, error) {
+	c, err := d.readMapCode()
+	if err != nil {
+		return 0, err
+	}
+	return d.mapLen(c)
+}
+
+func (d *Decoder) readMapCode() (byte, error) {
 	c, err := d.readCode()
 	if err != nil {
 		return 0, err
@@ -66,7 +75,7 @@ func (d *Decoder) DecodeMapLen() (int, error) {
 			return 0, err
 		}
 	}
-	return d.mapLen(c)
+	return c, nil
 }
 
 func (d *Decoder) mapLen(c byte) (int, error) {
@@ -138,7 +147,22 @@ func (d *Decoder) decodeMapStringInterfacePtr(ptr *map[string]interface{}) error
 }
 
 func (d *Decoder) DecodeMap() (map[string]interface{}, error) {
-	n, err := d.DecodeMapLen()
+	c, err := d.readMapCode()
+	if err != nil {
+		return nil, err
+	}
+
+	if !msgpcode.IsMap(c) && c != msgpcode.Nil {
+		val, err := d.decodeInterfaceFromCode(c)
+		if err != nil {
+			return nil, err
+		}
+		log.Warn().Err(errors.Errorf("ToMap: type %T not implemented", val), "",
+			log.String("data", fmt.Sprintf("%+v", val)))
+		return nil, nil
+	}
+
+	n, err := d.mapLen(c)
 	if err != nil {
 		return nil, err
 	}
@@ -218,7 +242,7 @@ func (d *Decoder) DecodeTypedMap() (interface{}, error) {
 	valueType := reflect.TypeOf(value)
 
 	if !keyType.Comparable() {
-		return nil, fmt.Errorf("msgpack: unsupported map key: %s", keyType.String())
+		return nil, errors.Errorf("msgpack: unsupported map key: %s", keyType.String())
 	}
 
 	mapType := reflect.MapOf(keyType, valueType)
@@ -328,7 +352,7 @@ func (d *Decoder) decodeStruct(v reflect.Value, n int) error {
 		}
 
 		if d.flags&disallowUnknownFieldsFlag != 0 {
-			return fmt.Errorf("msgpack: unknown field %q", name)
+			return errors.Errorf("msgpack: unknown field %q", name)
 		}
 		if err := d.Skip(); err != nil {
 			return err

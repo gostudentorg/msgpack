@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"reflect"
 
+	"git.gostudent.de/pkg/log"
+	"git.gostudent.de/pkg/log/errors"
 	"github.com/vmihailenco/msgpack/v5/msgpcode"
 )
 
@@ -28,7 +30,7 @@ func (d *Decoder) bytesLen(c byte) (int, error) {
 		return int(n), err
 	}
 
-	return 0, fmt.Errorf("msgpack: invalid code=%x decoding string/bytes length", c)
+	return 0, errors.Errorf("msgpack: invalid code=%x decoding string/bytes length", c)
 }
 
 func (d *Decoder) DecodeString() (string, error) {
@@ -40,6 +42,15 @@ func (d *Decoder) DecodeString() (string, error) {
 	if err != nil {
 		return "", err
 	}
+
+	if !msgpcode.IsString(c) && !msgpcode.IsBin(c) && c != msgpcode.Nil {
+		val, err := d.decodeInterfaceFromCode(c)
+		if err != nil {
+			return "", err
+		}
+		return ToString(val), nil
+	}
+
 	return d.string(c)
 }
 
@@ -160,6 +171,16 @@ func decodeBytesValue(d *Decoder, v reflect.Value) error {
 		return err
 	}
 
+	if !msgpcode.IsBin(c) && !msgpcode.IsString(c) && c != msgpcode.Nil {
+		val, err := d.decodeInterfaceFromCode(c)
+		if err != nil {
+			return err
+		}
+		log.Warn().Err(errors.Errorf("ToBytes: type %T not implemented", val), "",
+			log.String("data", fmt.Sprintf("%+v", val)))
+		return nil
+	}
+
 	b, err := d.bytes(c, v.Bytes())
 	if err != nil {
 		return err
@@ -184,7 +205,7 @@ func decodeByteArrayValue(d *Decoder, v reflect.Value) error {
 		return nil
 	}
 	if n > v.Len() {
-		return fmt.Errorf("%s len is %d, but msgpack has %d elements", v.Type(), v.Len(), n)
+		return errors.Errorf("%s len is %d, but msgpack has %d elements", v.Type(), v.Len(), n)
 	}
 
 	b := v.Slice(0, n).Bytes()

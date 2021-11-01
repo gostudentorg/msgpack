@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"reflect"
 
+	"git.gostudent.de/pkg/log"
+	"git.gostudent.de/pkg/log/errors"
 	"github.com/vmihailenco/msgpack/v5/msgpcode"
 )
 
@@ -32,7 +34,7 @@ func (d *Decoder) arrayLen(c byte) (int, error) {
 		n, err := d.uint32()
 		return int(n), err
 	}
-	return 0, fmt.Errorf("msgpack: invalid code=%x decoding array length", c)
+	return 0, errors.Errorf("msgpack: invalid code=%x decoding array length", c)
 }
 
 func decodeStringSliceValue(d *Decoder, v reflect.Value) error {
@@ -81,7 +83,22 @@ func makeStrings(s []string, n int) []string {
 }
 
 func decodeSliceValue(d *Decoder, v reflect.Value) error {
-	n, err := d.DecodeArrayLen()
+	c, err := d.readCode()
+	if err != nil {
+		return err
+	}
+
+	if !msgpcode.IsArray(c) && c != msgpcode.Nil {
+		val, err := d.decodeInterfaceFromCode(c)
+		if err != nil {
+			return err
+		}
+		log.Warn().Err(errors.Errorf("ToSlice: type %T not implemented", val), "",
+			log.String("data", fmt.Sprintf("%+v", val)))
+		return nil
+	}
+
+	n, err := d.arrayLen(c)
 	if err != nil {
 		return err
 	}
@@ -124,7 +141,22 @@ func growSliceValue(v reflect.Value, n int) reflect.Value {
 }
 
 func decodeArrayValue(d *Decoder, v reflect.Value) error {
-	n, err := d.DecodeArrayLen()
+	c, err := d.readCode()
+	if err != nil {
+		return err
+	}
+
+	if !msgpcode.IsArray(c) && c != msgpcode.Nil {
+		val, err := d.decodeInterfaceFromCode(c)
+		if err != nil {
+			return err
+		}
+		log.Warn().Err(errors.Errorf("ToSlice: type %T not implemented", val), "",
+			log.String("data", fmt.Sprintf("%+v", val)))
+		return nil
+	}
+
+	n, err := d.arrayLen(c)
 	if err != nil {
 		return err
 	}
@@ -133,7 +165,7 @@ func decodeArrayValue(d *Decoder, v reflect.Value) error {
 		return nil
 	}
 	if n > v.Len() {
-		return fmt.Errorf("%s len is %d, but msgpack has %d elements", v.Type(), v.Len(), n)
+		return errors.Errorf("%s len is %d, but msgpack has %d elements", v.Type(), v.Len(), n)
 	}
 
 	for i := 0; i < n; i++ {

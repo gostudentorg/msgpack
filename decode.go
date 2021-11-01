@@ -3,13 +3,12 @@ package msgpack
 import (
 	"bufio"
 	"bytes"
-	"errors"
-	"fmt"
 	"io"
 	"reflect"
 	"sync"
 	"time"
 
+	"git.gostudent.de/pkg/log/errors"
 	"github.com/vmihailenco/msgpack/v5/msgpcode"
 )
 
@@ -269,10 +268,10 @@ func (d *Decoder) Decode(v interface{}) error {
 		return errors.New("msgpack: Decode(nil)")
 	}
 	if vv.Kind() != reflect.Ptr {
-		return fmt.Errorf("msgpack: Decode(non-pointer %T)", v)
+		return errors.Errorf("msgpack: Decode(non-pointer %T)", v)
 	}
 	if vv.IsNil() {
-		return fmt.Errorf("msgpack: Decode(non-settable %T)", v)
+		return errors.Errorf("msgpack: Decode(non-settable %T)", v)
 	}
 
 	vv = vv.Elem()
@@ -280,7 +279,7 @@ func (d *Decoder) Decode(v interface{}) error {
 		if !vv.IsNil() {
 			vv = vv.Elem()
 			if vv.Kind() != reflect.Ptr {
-				return fmt.Errorf("msgpack: Decode(non-pointer %s)", vv.Type().String())
+				return errors.Errorf("msgpack: Decode(non-pointer %s)", vv.Type().String())
 			}
 		}
 	}
@@ -315,7 +314,7 @@ func (d *Decoder) DecodeNil() error {
 		return err
 	}
 	if c != msgpcode.Nil {
-		return fmt.Errorf("msgpack: invalid code=%x decoding nil", c)
+		return errors.Errorf("msgpack: invalid code=%x decoding nil", c)
 	}
 	return nil
 }
@@ -337,6 +336,15 @@ func (d *Decoder) DecodeBool() (bool, error) {
 	if err != nil {
 		return false, err
 	}
+
+	if !msgpcode.IsBool(c) && c != msgpcode.Nil {
+		val, err := d.decodeInterfaceFromCode(c)
+		if err != nil {
+			return false, err
+		}
+		return ToBool(val), nil
+	}
+
 	return d.bool(c)
 }
 
@@ -350,7 +358,7 @@ func (d *Decoder) bool(c byte) (bool, error) {
 	if c == msgpcode.True {
 		return true, nil
 	}
-	return false, fmt.Errorf("msgpack: invalid code=%x decoding bool", c)
+	return false, errors.Errorf("msgpack: invalid code=%x decoding bool", c)
 }
 
 func (d *Decoder) DecodeDuration() (time.Duration, error) {
@@ -381,11 +389,15 @@ func (d *Decoder) DecodeInterface() (interface{}, error) {
 		return nil, err
 	}
 
+	return d.decodeInterfaceFromCode(c)
+}
+
+func (d *Decoder) decodeInterfaceFromCode(c byte) (interface{}, error) {
 	if msgpcode.IsFixedNum(c) {
 		return int8(c), nil
 	}
 	if msgpcode.IsFixedMap(c) {
-		err = d.s.UnreadByte()
+		err := d.s.UnreadByte()
 		if err != nil {
 			return nil, err
 		}
@@ -430,7 +442,7 @@ func (d *Decoder) DecodeInterface() (interface{}, error) {
 	case msgpcode.Array16, msgpcode.Array32:
 		return d.decodeSlice(c)
 	case msgpcode.Map16, msgpcode.Map32:
-		err = d.s.UnreadByte()
+		err := d.s.UnreadByte()
 		if err != nil {
 			return nil, err
 		}
@@ -440,7 +452,7 @@ func (d *Decoder) DecodeInterface() (interface{}, error) {
 		return d.decodeInterfaceExt(c)
 	}
 
-	return 0, fmt.Errorf("msgpack: unknown code %x decoding interface{}", c)
+	return 0, errors.Errorf("msgpack: unknown code %x decoding interface{}", c)
 }
 
 // DecodeInterfaceLoose is like DecodeInterface except that:
@@ -498,7 +510,7 @@ func (d *Decoder) DecodeInterfaceLoose() (interface{}, error) {
 		return d.decodeInterfaceExt(c)
 	}
 
-	return 0, fmt.Errorf("msgpack: unknown code %x decoding interface{}", c)
+	return 0, errors.Errorf("msgpack: unknown code %x decoding interface{}", c)
 }
 
 // Skip skips next value.
@@ -545,7 +557,7 @@ func (d *Decoder) Skip() error {
 		return d.skipExt(c)
 	}
 
-	return fmt.Errorf("msgpack: unknown code %x", c)
+	return errors.Errorf("msgpack: unknown code %x", c)
 }
 
 func (d *Decoder) DecodeRaw() (RawMessage, error) {

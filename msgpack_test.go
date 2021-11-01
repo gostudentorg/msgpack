@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"git.gostudent.de/pkg/log/errors"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"github.com/vmihailenco/msgpack/v5"
@@ -89,7 +90,7 @@ func (t *MsgpackTest) TestMap() {
 		{map[string]string{"hello": "world"}, []byte{0x81, 0xa5, 0x68, 0x65, 0x6c, 0x6c, 0x6f, 0xa5, 0x77, 0x6f, 0x72, 0x6c, 0x64}},
 	} {
 		t.Nil(t.enc.Encode(i.m))
-		t.Equal(t.buf.Bytes(), i.b, fmt.Errorf("err encoding %v", i.m))
+		t.Equal(t.buf.Bytes(), i.b, errors.Errorf("err encoding %v", i.m))
 		var m map[string]string
 		t.Nil(t.dec.Decode(&m))
 		t.Equal(m, i.m)

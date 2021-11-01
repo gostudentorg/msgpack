@@ -2,11 +2,12 @@ package msgpack
 
 import (
 	"encoding"
-	"fmt"
-	"log"
 	"reflect"
 	"sync"
+	"time"
 
+	"git.gostudent.de/pkg/log"
+	"git.gostudent.de/pkg/log/errors"
 	"github.com/vmihailenco/tagparser/v2"
 )
 
@@ -55,7 +56,7 @@ func Register(value interface{}, enc encoderFunc, dec decoderFunc) {
 	}
 }
 
-//------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 
 const defaultStructTag = "msgpack"
 
@@ -87,7 +88,7 @@ func (m *structCache) Fields(typ reflect.Type, tag string) *fields {
 	return fs
 }
 
-//------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 
 type field struct {
 	name      string
@@ -113,12 +114,27 @@ func (f *field) EncodeValue(e *Encoder, strct reflect.Value) error {
 	return f.encoder(e, v)
 }
 
+var reflectTime = reflect.TypeOf(time.Time{})
+
 func (f *field) DecodeValue(d *Decoder, strct reflect.Value) error {
 	v := fieldByIndexAlloc(strct, f.index)
+	if !v.CanSet() {
+		return errors.Errorf("msgpack interface decoding: cannot set field %s", f.name)
+	}
+
+	if v.Type() == reflectTime {
+		iface, err := d.DecodeInterface()
+		if err != nil {
+			return err
+		}
+		v.Set(reflect.ValueOf(ToTime(iface)))
+		return nil
+	}
+
 	return f.decoder(d, v)
 }
 
-//------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 
 type fields struct {
 	Type    reflect.Type
@@ -148,7 +164,7 @@ func (fs *fields) Add(field *field) {
 
 func (fs *fields) warnIfFieldExists(name string) {
 	if _, ok := fs.Map[name]; ok {
-		log.Printf("msgpack: %s already has field=%s", fs.Type, name)
+		log.Msgf("msgpack: %s already has field=%s", fs.Type, name)
 	}
 }
 
@@ -211,7 +227,7 @@ func getFields(typ reflect.Type, fallbackTag string) *fields {
 				field.encoder = encodeInternedStringValue
 				field.decoder = decodeInternedStringValue
 			default:
-				err := fmt.Errorf("msgpack: intern strings are not supported on %s", f.Type)
+				err := errors.Errorf("msgpack: intern strings are not supported on %s", f.Type)
 				panic(err)
 			}
 		} else {
@@ -233,7 +249,7 @@ func getFields(typ reflect.Type, fallbackTag string) *fields {
 
 			if inline {
 				if _, ok := fs.Map[field.name]; ok {
-					log.Printf("msgpack: %s already has field=%s", fs.Type, field.name)
+					log.Msgf("msgpack: %s already has field=%s", fs.Type, field.name)
 				}
 				fs.Map[field.name] = field
 				continue

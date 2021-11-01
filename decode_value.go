@@ -2,9 +2,9 @@ package msgpack
 
 import (
 	"encoding"
-	"errors"
-	"fmt"
 	"reflect"
+
+	"git.gostudent.de/pkg/log/errors"
 )
 
 var (
@@ -141,7 +141,7 @@ func ptrValueDecoder(typ reflect.Type) decoderFunc {
 func addrDecoder(fn decoderFunc) decoderFunc {
 	return func(d *Decoder, v reflect.Value) error {
 		if !v.CanAddr() {
-			return fmt.Errorf("msgpack: Decode(nonaddressable %T)", v.Interface())
+			return errors.Errorf("msgpack: Decode(nonaddressable %T)", v.Interface())
 		}
 		return fn(d, v.Addr())
 	}
@@ -205,7 +205,7 @@ func (d *Decoder) interfaceValue(v reflect.Value) error {
 }
 
 func decodeUnsupportedValue(d *Decoder, v reflect.Value) error {
-	return fmt.Errorf("msgpack: Decode(unsupported %s)", v.Type())
+	return errors.Errorf("msgpack: Decode(unsupported %s)", v.Type())
 }
 
 //------------------------------------------------------------------------------

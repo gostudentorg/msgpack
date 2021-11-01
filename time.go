@@ -6,14 +6,73 @@ import (
 	"reflect"
 	"time"
 
+	"git.gostudent.de/pkg/log/errors"
 	"github.com/vmihailenco/msgpack/v5/msgpcode"
 )
+
+const millisec = 1000000
 
 var timeExtID int8 = -1
 
 func init() {
 	RegisterExtEncoder(timeExtID, time.Time{}, timeEncoder)
 	RegisterExtDecoder(timeExtID, time.Time{}, timeDecoder)
+
+	RegisterExtEncoder(13, (*time.Time)(nil), func(e *Encoder, v reflect.Value) ([]byte, error) {
+		t := v.Interface().(*time.Time)
+		if t == nil {
+			return nil, nil
+		}
+		return marshalTime(*t)
+	})
+	RegisterExtDecoder(13, (*time.Time)(nil), func(d *Decoder, v reflect.Value, extLen int) error {
+		b := make([]byte, extLen)
+		_, err := d.Buffered().Read(b)
+		if err != nil {
+			return err
+		}
+
+		return unmarshalTime(b, v.Interface().(*time.Time))
+	})
+}
+
+func marshalTime(d time.Time) ([]byte, error) {
+	return Marshal(d.UnixNano() / millisec)
+}
+
+func unmarshalTime(data []byte, d *time.Time) error {
+	if len(data) == 0 {
+		return nil
+	}
+
+	var v interface{}
+	if err := Unmarshal(data, &v); err != nil {
+		return err
+	}
+
+	switch val := v.(type) {
+	case float64:
+		*d = time.Unix(0, int64(val*millisec))
+	case int64:
+		*d = time.Unix(val/1000, (val%1000)*millisec)
+	case string:
+		t, err := time.Parse(time.RFC3339Nano, val)
+		if err != nil {
+			return errors.Wrap(err, errors.Msg("unmarshalTime: string layout not implemented"),
+				errors.Fields{"value": val})
+		}
+		*d = t
+	case *time.Time:
+		*d = *val
+	default:
+		return errors.New("unmarshalTime: unimplemented type", errors.Fields{
+			"type":      reflect.TypeOf(v).String(),
+			"value":     string(data),
+			"value_hex": fmt.Sprintf("%x", data),
+		})
+	}
+
+	return nil
 }
 
 func timeEncoder(e *Encoder, v reflect.Value) ([]byte, error) {
@@ -105,7 +164,7 @@ func (d *Decoder) DecodeTime() (time.Time, error) {
 
 	// NodeJS seems to use extID 13.
 	if extID != timeExtID && extID != 13 {
-		return time.Time{}, fmt.Errorf("msgpack: invalid time ext id=%d", extID)
+		return time.Time{}, errors.Errorf("msgpack: invalid time ext id=%d", extID)
 	}
 
 	tm, err := d.decodeTime(extLen)
@@ -140,7 +199,7 @@ func (d *Decoder) decodeTime(extLen int) (time.Time, error) {
 		sec := binary.BigEndian.Uint64(b[4:])
 		return time.Unix(int64(sec), int64(nsec)), nil
 	default:
-		err = fmt.Errorf("msgpack: invalid ext len=%d decoding time", extLen)
+		err = errors.Errorf("msgpack: invalid ext len=%d decoding time", extLen)
 		return time.Time{}, err
 	}
 }
