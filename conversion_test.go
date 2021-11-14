@@ -218,22 +218,21 @@ func TestConversion_ToNumbers(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			asrt := is.New(t)
-			s := Conversion{}
 
 			if tt.wantInt != 0 || tt.input == nil {
-				asrt.Equal(tt.wantInt, s.ToInt(tt.input))
+				asrt.Equal(tt.wantInt, ToInt(tt.input))
 			}
 			if tt.wantInt64 != 0 || tt.input == nil {
-				asrt.Equal(tt.wantInt64, s.ToInt64(tt.input))
+				asrt.Equal(tt.wantInt64, ToInt64(tt.input))
 			}
 			if tt.wantUInt64 != 0 || tt.input == nil {
-				asrt.Equal(tt.wantUInt64, s.ToUInt64(tt.input))
+				asrt.Equal(tt.wantUInt64, ToUInt64(tt.input))
 			}
 			if tt.wantFloat64 != 0 || tt.input == nil {
-				asrt.Equal(tt.wantFloat64, s.ToFloat64(tt.input))
+				asrt.Equal(tt.wantFloat64, ToFloat64(tt.input))
 			}
 			if tt.wantString != "" || tt.input == nil {
-				asrt.Equal(tt.wantString, s.ToString(tt.input))
+				asrt.Equal(tt.wantString, ToString(tt.input))
 			}
 		})
 	}

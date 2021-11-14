@@ -293,13 +293,13 @@ func ToBool(i interface{}) bool {
 		}
 		return false
 	case float32:
-		log.Debug().Err(errors.Errorf("ToBool: lossy conversion from float32 (%d)", v), "")
+		log.Debug().Err(errors.Errorf("ToBool: lossy conversion from float32 (%f)", v), "")
 		if v == 1 {
 			return true
 		}
 		return false
 	case float64:
-		log.Debug().Err(errors.Errorf("ToBool: lossy conversion from float64 (%d)", v), "")
+		log.Debug().Err(errors.Errorf("ToBool: lossy conversion from float64 (%f)", v), "")
 		if v == 1 {
 			return true
 		}
