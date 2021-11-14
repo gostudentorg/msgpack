@@ -1,8 +1,10 @@
 package msgpack
 
 import (
+	"bytes"
 	"encoding/binary"
 	"fmt"
+	"math"
 	"reflect"
 	"time"
 
@@ -12,71 +14,26 @@ import (
 
 const millisec = 1000000
 
-var timeExtID int8 = -1
+var timeExtID int8 = 13
 
 func init() {
 	RegisterExtEncoder(timeExtID, time.Time{}, timeEncoder)
 	RegisterExtDecoder(timeExtID, time.Time{}, timeDecoder)
-
-	RegisterExtEncoder(13, (*time.Time)(nil), func(e *Encoder, v reflect.Value) ([]byte, error) {
-		t := v.Interface().(*time.Time)
-		if t == nil {
-			return nil, nil
-		}
-		return marshalTime(*t)
-	})
-	RegisterExtDecoder(13, (*time.Time)(nil), func(d *Decoder, v reflect.Value, extLen int) error {
-		b := make([]byte, extLen)
-		_, err := d.Buffered().Read(b)
-		if err != nil {
-			return err
-		}
-
-		return unmarshalTime(b, v.Interface().(*time.Time))
-	})
 }
 
-func marshalTime(d time.Time) ([]byte, error) {
-	return Marshal(d.UnixNano() / millisec)
-}
-
-func unmarshalTime(data []byte, d *time.Time) error {
-	if len(data) == 0 {
-		return nil
+func timeEncoder(_ *Encoder, v reflect.Value) ([]byte, error) {
+	t := v.Interface().(time.Time)
+	if t.IsZero() {
+		t = time.Unix(0, 0)
 	}
 
-	var v interface{}
-	if err := Unmarshal(data, &v); err != nil {
-		return err
+	b := bytes.Buffer{}
+	e := NewEncoder(&b)
+	if r := e.EncodeFloat64(float64(t.UnixMilli())); r != nil {
+		return nil, r
 	}
 
-	switch val := v.(type) {
-	case float64:
-		*d = time.Unix(0, int64(val*millisec))
-	case int64:
-		*d = time.Unix(val/1000, (val%1000)*millisec)
-	case string:
-		t, err := time.Parse(time.RFC3339Nano, val)
-		if err != nil {
-			return errors.Wrap(err, errors.Msg("unmarshalTime: string layout not implemented"),
-				errors.Fields{"value": val})
-		}
-		*d = t
-	case *time.Time:
-		*d = *val
-	default:
-		return errors.New("unmarshalTime: unimplemented type", errors.Fields{
-			"type":      reflect.TypeOf(v).String(),
-			"value":     string(data),
-			"value_hex": fmt.Sprintf("%x", data),
-		})
-	}
-
-	return nil
-}
-
-func timeEncoder(e *Encoder, v reflect.Value) ([]byte, error) {
-	return e.encodeTime(v.Interface().(time.Time)), nil
+	return b.Bytes(), nil
 }
 
 func timeDecoder(d *Decoder, v reflect.Value, extLen int) error {
@@ -92,40 +49,13 @@ func timeDecoder(d *Decoder, v reflect.Value, extLen int) error {
 }
 
 func (e *Encoder) EncodeTime(tm time.Time) error {
-	b := e.encodeTime(tm)
-	if err := e.encodeExtLen(len(b)); err != nil {
+	if err := e.encodeExtLen(9); err != nil {
 		return err
 	}
 	if err := e.w.WriteByte(byte(timeExtID)); err != nil {
 		return err
 	}
-	return e.write(b)
-}
-
-func (e *Encoder) encodeTime(tm time.Time) []byte {
-	if e.timeBuf == nil {
-		e.timeBuf = make([]byte, 12)
-	}
-
-	secs := uint64(tm.Unix())
-	if secs>>34 == 0 {
-		data := uint64(tm.Nanosecond())<<34 | secs
-
-		if data&0xffffffff00000000 == 0 {
-			b := e.timeBuf[:4]
-			binary.BigEndian.PutUint32(b, uint32(data))
-			return b
-		}
-
-		b := e.timeBuf[:8]
-		binary.BigEndian.PutUint64(b, data)
-		return b
-	}
-
-	b := e.timeBuf[:12]
-	binary.BigEndian.PutUint32(b, uint32(tm.Nanosecond()))
-	binary.BigEndian.PutUint64(b[4:], secs)
-	return b
+	return e.write8(msgpcode.Double, math.Float64bits(float64(tm.UnixMilli())))
 }
 
 func (d *Decoder) DecodeTime() (time.Time, error) {
@@ -162,8 +92,7 @@ func (d *Decoder) DecodeTime() (time.Time, error) {
 		return time.Time{}, err
 	}
 
-	// NodeJS seems to use extID 13.
-	if extID != timeExtID && extID != 13 {
+	if extID != timeExtID {
 		return time.Time{}, errors.Errorf("msgpack: invalid time ext id=%d", extID)
 	}
 
@@ -199,7 +128,48 @@ func (d *Decoder) decodeTime(extLen int) (time.Time, error) {
 		sec := binary.BigEndian.Uint64(b[4:])
 		return time.Unix(int64(sec), int64(nsec)), nil
 	default:
-		err = errors.Errorf("msgpack: invalid ext len=%d decoding time", extLen)
-		return time.Time{}, err
+		t := time.Time{}
+		if r := unmarshalTime(b, &t); r != nil {
+			return time.Time{}, r
+		}
+		return t, nil
 	}
+}
+
+func unmarshalTime(data []byte, d *time.Time) error {
+	if len(data) == 0 {
+		return nil
+	}
+
+	var v interface{}
+	if err := Unmarshal(data, &v); err != nil {
+		return err
+	}
+
+	switch val := v.(type) {
+	case float64:
+		if val == 0 {
+			return nil
+		}
+		*d = time.Unix(0, int64(val*millisec))
+	case int64:
+		*d = time.Unix(val/1000, (val%1000)*millisec)
+	case string:
+		t, err := time.Parse(time.RFC3339Nano, val)
+		if err != nil {
+			return errors.Wrap(err, errors.Msg("unmarshalTime: string layout not implemented"),
+				errors.Fields{"value": val})
+		}
+		*d = t
+	case *time.Time:
+		*d = *val
+	default:
+		return errors.New("unmarshalTime: unimplemented type", errors.Fields{
+			"type":      reflect.TypeOf(v).String(),
+			"value":     string(data),
+			"value_hex": fmt.Sprintf("%x", data),
+		})
+	}
+
+	return nil
 }

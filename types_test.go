@@ -249,9 +249,9 @@ var encoderTests = []encoderTest{
 	{[]byte{1, 2, 3}, "c403010203"},
 	{[3]byte{1, 2, 3}, "c403010203"},
 
-	{time.Unix(0, 0), "d6ff00000000"},
-	{time.Unix(1, 1), "d7ff0000000400000001"},
-	{time.Time{}, "c70cff00000000fffffff1886e0900"},
+	{time.Unix(0, 0), "c7090dcb0000000000000000"},
+	{time.Unix(1, 1000000), "c7090dcb408f480000000000"},
+	{time.Time{}, "c7090dcbc2cc4189166c0000"},
 
 	{IntSet{}, "90"},
 	{IntSet{8: struct{}{}}, "9108"},
@@ -553,11 +553,11 @@ var (
 			out: new(EmbeddingTest),
 		},
 
-		{in: time.Unix(0, 0), out: new(time.Time)},
-		{in: new(time.Time), out: new(time.Time)},
-		{in: time.Unix(0, 1), out: new(time.Time)},
-		{in: time.Unix(1, 0), out: new(time.Time)},
-		{in: time.Unix(1, 1), out: new(time.Time)},
+		{in: time.Unix(0, 0), out: new(time.Time), wanted: time.Time{}},
+		{in: new(time.Time), out: new(time.Time), wanted: time.Time{}},
+		{in: time.Unix(0, 1000000), out: new(time.Time), wanted: time.Unix(0, 1000000)},
+		{in: time.Unix(1, 0), out: new(time.Time), wanted: time.Unix(1, 0)},
+		{in: time.Unix(1, 1000000), out: new(time.Time), wanted: time.Unix(1, 1000000)},
 		{
 			in:     time.Unix(0, 0).Format(time.RFC3339),
 			out:    new(time.Time),
@@ -565,7 +565,7 @@ var (
 		},
 		{in: EmbeddedTime{Time: time.Unix(1, 1)}, out: new(EmbeddedTime)},
 		{in: EmbeddedTime{Time: time.Unix(1, 1)}, out: new(*EmbeddedTime)},
-		{in: CustomTime(time.Unix(0, 0)), out: new(CustomTime)},
+		{in: CustomTime(time.Unix(0, 0)), out: new(CustomTime), wanted: CustomTime(time.Time{})},
 
 		{in: nil, out: new(*CustomEncoder), wantnil: true},
 		{in: nil, out: &CustomEncoder{str: "a"}, wantzero: true},
