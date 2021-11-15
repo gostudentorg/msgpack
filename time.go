@@ -29,7 +29,7 @@ func timeEncoder(_ *Encoder, v reflect.Value) ([]byte, error) {
 
 	b := bytes.Buffer{}
 	e := NewEncoder(&b)
-	if r := e.EncodeFloat64(float64(t.UnixMilli())); r != nil {
+	if r := e.EncodeFloat64(float64(t.Unix()*1000 + int64(t.Nanosecond())/millisec)); r != nil {
 		return nil, r
 	}
 
@@ -55,7 +55,7 @@ func (e *Encoder) EncodeTime(tm time.Time) error {
 	if err := e.w.WriteByte(byte(timeExtID)); err != nil {
 		return err
 	}
-	return e.write8(msgpcode.Double, math.Float64bits(float64(tm.UnixMilli())))
+	return e.write8(msgpcode.Double, math.Float64bits(float64(tm.Unix()*1000+int64(tm.Nanosecond())/millisec)))
 }
 
 func (d *Decoder) DecodeTime() (time.Time, error) {
