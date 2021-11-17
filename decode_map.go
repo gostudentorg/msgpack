@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"reflect"
 
-	"git.gostudent.de/pkg/log"
-	"git.gostudent.de/pkg/log/errors"
 	"github.com/vmihailenco/msgpack/v5/msgpcode"
+	"gitlab.gostudent.cloud/pkg/log"
+	"gitlab.gostudent.cloud/pkg/log/errors"
 )
 
 var errArrayStruct = errors.New("msgpack: number of fields in array-encoded struct has changed")

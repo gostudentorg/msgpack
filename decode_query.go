@@ -4,8 +4,8 @@ import (
 	"strconv"
 	"strings"
 
-	"git.gostudent.de/pkg/log/errors"
 	"github.com/vmihailenco/msgpack/v5/msgpcode"
+	"gitlab.gostudent.cloud/pkg/log/errors"
 )
 
 type queryResult struct {

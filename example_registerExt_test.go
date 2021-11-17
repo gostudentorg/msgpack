@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"git.gostudent.de/pkg/log/errors"
 	"github.com/vmihailenco/msgpack/v5"
+	"gitlab.gostudent.cloud/pkg/log/errors"
 )
 
 // https://github.com/fluent/fluentd/wiki/Forward-Protocol-Specification-v1#eventtime-ext-format

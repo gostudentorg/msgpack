@@ -6,9 +6,9 @@ import (
 	"sync"
 	"time"
 
-	"git.gostudent.de/pkg/log"
-	"git.gostudent.de/pkg/log/errors"
 	"github.com/vmihailenco/tagparser/v2"
+	"gitlab.gostudent.cloud/pkg/log"
+	"gitlab.gostudent.cloud/pkg/log/errors"
 )
 
 var errorType = reflect.TypeOf((*error)(nil)).Elem()

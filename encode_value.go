@@ -4,7 +4,7 @@ import (
 	"encoding"
 	"reflect"
 
-	"git.gostudent.de/pkg/log/errors"
+	"gitlab.gostudent.cloud/pkg/log/errors"
 )
 
 var valueEncoders []encoderFunc

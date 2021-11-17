@@ -4,8 +4,8 @@ import (
 	"strconv"
 	"time"
 
-	"git.gostudent.de/pkg/log"
-	"git.gostudent.de/pkg/log/errors"
+	"gitlab.gostudent.cloud/pkg/log"
+	"gitlab.gostudent.cloud/pkg/log/errors"
 )
 
 // ToInt converts a number to an integer value.

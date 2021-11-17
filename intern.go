@@ -4,8 +4,8 @@ import (
 	"math"
 	"reflect"
 
-	"git.gostudent.de/pkg/log/errors"
 	"github.com/vmihailenco/msgpack/v5/msgpcode"
+	"gitlab.gostudent.cloud/pkg/log/errors"
 )
 
 const (

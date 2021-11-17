@@ -9,10 +9,10 @@ import (
 	"testing"
 	"time"
 
-	"git.gostudent.de/pkg/log/errors"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"github.com/vmihailenco/msgpack/v5"
+	"gitlab.gostudent.cloud/pkg/log/errors"
 )
 
 type nameStruct struct {
