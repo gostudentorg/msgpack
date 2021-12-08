@@ -15,10 +15,12 @@ import (
 const millisec = 1000000
 
 var timeExtID int8 = 13
+var timeExtID2 int8 = -1
 
 func init() {
 	RegisterExtEncoder(timeExtID, time.Time{}, timeEncoder)
 	RegisterExtDecoder(timeExtID, time.Time{}, timeDecoder)
+	RegisterExtDecoder(timeExtID2, time.Time{}, timeDecoder)
 }
 
 func timeEncoder(_ *Encoder, v reflect.Value) ([]byte, error) {
@@ -92,7 +94,7 @@ func (d *Decoder) DecodeTime() (time.Time, error) {
 		return time.Time{}, err
 	}
 
-	if extID != timeExtID {
+	if extID != timeExtID && extID != timeExtID2 {
 		return time.Time{}, errors.Errorf("msgpack: invalid time ext id=%d", extID)
 	}
 
