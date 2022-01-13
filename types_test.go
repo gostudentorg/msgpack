@@ -558,6 +558,9 @@ var (
 		{in: time.Unix(0, 1000000), out: new(time.Time), wanted: time.Unix(0, 1000000)},
 		{in: time.Unix(1, 0), out: new(time.Time), wanted: time.Unix(1, 0)},
 		{in: time.Unix(1, 1000000), out: new(time.Time), wanted: time.Unix(1, 1000000)},
+		{in: 1001.1, out: new(time.Time), wanted: time.Unix(1, 1100000)},
+		{in: 1.6383168e+12, out: new(time.Time), wanted: time.Date(2021, 12, 1, 0, 0, 0, 0, time.UTC).
+			In(time.Local)},
 		{
 			in:     time.Unix(0, 0).Format(time.RFC3339),
 			out:    new(time.Time),

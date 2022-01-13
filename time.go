@@ -88,6 +88,14 @@ func (d *Decoder) DecodeTime() (time.Time, error) {
 		}
 		return time.Parse(time.RFC3339Nano, s)
 	}
+	if msgpcode.IsFloat(c) {
+		f, err := d.float64(c)
+		if err != nil {
+			return time.Time{}, err
+		}
+
+		return time.Unix(0, int64(f*millisec)), nil
+	}
 
 	extID, extLen, err := d.extHeader(c)
 	if err != nil {
