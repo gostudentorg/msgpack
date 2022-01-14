@@ -5,6 +5,7 @@ import (
 	"reflect"
 
 	"github.com/vmihailenco/msgpack/v5/msgpcode"
+
 	"gitlab.gostudent.cloud/pkg/log/errors"
 )
 
@@ -148,7 +149,9 @@ func makeExtDecoder(
 			return err
 		}
 		if extID != wantedExtID {
-			return errors.Errorf("msgpack: got ext type=%d, wanted %d", extID, wantedExtID)
+			if wantedExtID != timeExtID2 || extID != timeExtID {
+				return errors.Errorf("msgpack: got ext type=%d, wanted %d", extID, wantedExtID)
+			}
 		}
 		return decoder(d, v, extLen)
 	})
