@@ -13,11 +13,11 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	"github.com/vmihailenco/msgpack/v5"
-	"github.com/vmihailenco/msgpack/v5/msgpcode"
+	"github.com/gostudentorg/msgpack/v5"
+	"github.com/gostudentorg/msgpack/v5/msgpcode"
 )
 
-//------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 
 type Object struct {
 	n int64
@@ -31,7 +31,7 @@ func (o *Object) UnmarshalMsgpack(b []byte) error {
 	return msgpack.Unmarshal(b, &o.n)
 }
 
-//------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 
 type CustomTime time.Time
 
@@ -49,7 +49,7 @@ func (t *CustomTime) DecodeMsgpack(dec *msgpack.Decoder) error {
 	return nil
 }
 
-//------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 
 type IntSet map[int]struct{}
 
@@ -85,7 +85,7 @@ func (setptr *IntSet) DecodeMsgpack(dec *msgpack.Decoder) error {
 	return nil
 }
 
-//------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 
 type CustomEncoder struct {
 	str string
@@ -124,7 +124,7 @@ func (s *CustomEncoderEmbeddedPtr) DecodeMsgpack(dec *msgpack.Decoder) error {
 	return s.CustomEncoder.DecodeMsgpack(dec)
 }
 
-//------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 
 type JSONFallbackTest struct {
 	Foo string `json:"foo,omitempty"`
@@ -160,7 +160,7 @@ func TestUseJsonTag(t *testing.T) {
 	}
 }
 
-//------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 
 type CustomFallbackTest struct {
 	Foo string `custom:"foo,omitempty"`
@@ -194,7 +194,7 @@ func TestUseCustomTag(t *testing.T) {
 	}
 }
 
-//------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 
 type OmitTimeTest struct {
 	Foo time.Time  `msgpack:",omitempty"`
@@ -235,7 +235,7 @@ type ExtTestField struct {
 	ExtTest ExtTest
 }
 
-//------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 
 type encoderTest struct {
 	in     interface{}
@@ -351,7 +351,7 @@ func TestFloatEncoding(t *testing.T) {
 	}
 }
 
-//------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 
 type decoderTest struct {
 	b   []byte
@@ -378,7 +378,7 @@ func TestDecoder(t *testing.T) {
 	}
 }
 
-//------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 
 type unexported struct {
 	Foo string

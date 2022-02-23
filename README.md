@@ -56,13 +56,13 @@ go mod init github.com/my/repo
 And then install msgpack/v5 (note _v5_ in the import; omitting it is a popular mistake):
 
 ```shell
-go get github.com/vmihailenco/msgpack/v5
+go get github.com/gostudentorg/msgpack/v5
 ```
 
 ## Quickstart
 
 ```go
-import "github.com/vmihailenco/msgpack/v5"
+import "github.com/gostudentorg/msgpack/v5"
 
 func ExampleMarshal() {
     type Item struct {

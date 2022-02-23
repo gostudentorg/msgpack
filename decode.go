@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/vmihailenco/msgpack/v5/msgpcode"
+	"github.com/gostudentorg/msgpack/v5/msgpcode"
 	"gitlab.gostudent.cloud/pkg/log/errors"
 )
 
@@ -28,7 +28,7 @@ type bufReader interface {
 	io.ByteScanner
 }
 
-//------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 
 var decPool = sync.Pool{
 	New: func() interface{} {
@@ -46,7 +46,7 @@ func PutDecoder(dec *Decoder) {
 	decPool.Put(dec)
 }
 
-//------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 
 // Unmarshal decodes the MessagePack-encoded data and stores the result
 // in the value pointed to by v.

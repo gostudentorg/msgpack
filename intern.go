@@ -4,7 +4,7 @@ import (
 	"math"
 	"reflect"
 
-	"github.com/vmihailenco/msgpack/v5/msgpcode"
+	"github.com/gostudentorg/msgpack/v5/msgpcode"
 	"gitlab.gostudent.cloud/pkg/log/errors"
 )
 
@@ -37,7 +37,7 @@ func decodeInternedStringExt(d *Decoder, v reflect.Value, extLen int) error {
 	return nil
 }
 
-//------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 
 func encodeInternedInterfaceValue(e *Encoder, v reflect.Value) error {
 	if v.IsNil() {
@@ -99,7 +99,7 @@ func (e *Encoder) encodeInternedStringIndex(idx int) error {
 	return errors.Errorf("msgpack: interned string index=%d is too large", idx)
 }
 
-//------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 
 func decodeInternedInterfaceValue(d *Decoder, v reflect.Value) error {
 	s, err := d.decodeInternedString(true)

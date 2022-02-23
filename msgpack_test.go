@@ -11,7 +11,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	"github.com/vmihailenco/msgpack/v5"
+	"github.com/gostudentorg/msgpack/v5"
 	"gitlab.gostudent.cloud/pkg/log/errors"
 )
 
@@ -125,7 +125,7 @@ func (t *MsgpackTest) TestStructUnknownField() {
 	t.Equal(out.Field2, "value2")
 }
 
-//------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 
 type coderStruct struct {
 	name string
@@ -193,7 +193,7 @@ func (t *MsgpackTest) TestWrappedCoder() {
 	t.Equal(out.Name(), "hello")
 }
 
-//------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 
 type struct2 struct {
 	Name string
@@ -257,9 +257,9 @@ func (t *MsgpackTest) TestSliceNil() {
 	t.Equal(out, in)
 }
 
-//------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 
-//------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 
 func TestNoPanicOnUnsupportedKey(t *testing.T) {
 	data := []byte{0x81, 0x81, 0xa1, 0x78, 0xc3, 0xc3}

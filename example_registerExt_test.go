@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/vmihailenco/msgpack/v5"
+	"github.com/gostudentorg/msgpack/v5"
 	"gitlab.gostudent.cloud/pkg/log/errors"
 )
 
