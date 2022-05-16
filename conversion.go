@@ -2,6 +2,7 @@ package msgpack
 
 import (
 	"strconv"
+	"strings"
 	"time"
 
 	"gitlab.gostudent.cloud/pkg/log"
@@ -330,7 +331,7 @@ func ToTime(i interface{}) time.Time {
 	case int64:
 		return time.Unix(v/1000, (v%1000)*millisec)
 	case string:
-		t, err := time.Parse(time.RFC3339Nano, v)
+		t, err := stringToTime(v)
 		if err != nil {
 			log.Warn().Err(err, "ToTime: invalid string value or not unimplemented layout",
 				log.String("value", v))
@@ -344,6 +345,18 @@ func ToTime(i interface{}) time.Time {
 		log.Warn().Err(errors.Errorf("ToTime: type %T not implemented", i), "")
 	}
 	return time.Time{}
+}
+
+func stringToTime(s string) (time.Time, error) {
+	if t, r := time.Parse(time.RFC3339Nano, s); r == nil {
+		return t, nil
+	}
+
+	// split away the monotonic clock part
+	if i := strings.Index(s, " m="); i != -1 {
+		s = s[:i]
+	}
+	return time.Parse("2006-01-02 15:04:05.999999999 -0700 MST", s)
 }
 
 func stringToInt64(s string) (int64, error) {

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/gostudentorg/msgpack/v5/msgpcode"
+
 	"gitlab.gostudent.cloud/pkg/log/errors"
 )
 
@@ -86,7 +87,7 @@ func (d *Decoder) DecodeTime() (time.Time, error) {
 		if err != nil {
 			return time.Time{}, err
 		}
-		return time.Parse(time.RFC3339Nano, s)
+		return stringToTime(s)
 	}
 	if msgpcode.IsFloat(c) {
 		f, err := d.float64(c)
@@ -165,7 +166,7 @@ func unmarshalTime(data []byte, d *time.Time) error {
 	case int64:
 		*d = time.Unix(val/1000, (val%1000)*millisec)
 	case string:
-		t, err := time.Parse(time.RFC3339Nano, val)
+		t, err := stringToTime(val)
 		if err != nil {
 			return errors.Wrap(err, errors.Msg("unmarshalTime: string layout not implemented"),
 				errors.Fields{"value": val})
