@@ -181,6 +181,10 @@ func decodeInterfaceValue(d *Decoder, v reflect.Value) error {
 	if v.IsNil() {
 		return d.interfaceValue(v)
 	}
+	// Maybe find another way to distinguish a pointer to another variable in an interface{} field
+	if !v.Elem().CanSet() {
+		return d.Decode(v.Interface())
+	}
 	return d.DecodeValue(v.Elem())
 }
 
